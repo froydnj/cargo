@@ -620,9 +620,15 @@ fn build_deps_args(cmd: &mut CommandPrototype, cx: &Context, unit: &Unit)
         cmd.env("OUT_DIR", &layout.build_out(unit.pkg));
     }
 
-    for unit in try!(cx.dep_targets(unit)).iter() {
-        if unit.target.linkable() && !unit.profile.doc {
-            try!(link_to(cmd, cx, unit));
+    for dep in try!(cx.dep_targets(unit)).iter() {
+        if !dep.profile.doc {
+            if dep.target.linkable() {
+                try!(link_to(cmd, cx, dep));
+            } else {
+                return Err(human(format!("Crate {} cannot be linked into {}",
+                                         dep.target.crate_name(),
+                                         unit.target.crate_name())))
+            }
         }
     }
 
